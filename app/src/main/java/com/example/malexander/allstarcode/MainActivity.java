@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import com.spotify.sdk.android.player.Spotify;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
@@ -28,6 +30,11 @@ public class MainActivity extends Activity implements
 
 
     private Player mPlayer;
+    private Boolean mIsPlaying;
+    private String mLastTrackURI;
+    private EditText mEdit;
+    private TextView mTrackTitle;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,6 +47,9 @@ public class MainActivity extends Activity implements
         AuthenticationRequest request = builder.build();
 
         AuthenticationClient.openLoginActivity(this, REQUEST_CODE, request);
+
+
+        mTrackTitle  = (TextView)findViewById(R.id.trackTitle);
     }
 
     @Override
@@ -57,7 +67,7 @@ public class MainActivity extends Activity implements
                         mPlayer = player;
                         mPlayer.addConnectionStateCallback(MainActivity.this);
                         mPlayer.addPlayerNotificationCallback(MainActivity.this);
-                        mPlayer.play("spotify:track:2TpxZ7JUBn3uw46aR7qd6V");
+                        mPlayer.play("spotify:user:spotify:playlist:5FJXhjdILmRA2z5bvz4nzf");
                     }
 
                     @Override
@@ -66,6 +76,31 @@ public class MainActivity extends Activity implements
                     }
                 });
             }
+        }
+    }
+
+    public void onPlayPauseClick(View view) {
+        if (!mIsPlaying) {
+            mPlayer.resume();
+        } else {
+            mPlayer.pause();
+        }
+    }
+
+    public void onNextClick(View view) {
+        mPlayer.skipToNext();
+    }
+
+    public void onPreviousClick(View view) {
+        mPlayer.skipToPrevious();
+    }
+
+    public void onPlayUsing(View view) {
+        mEdit   = (EditText)findViewById(R.id.editText);
+        String s = mEdit.getText().toString();
+
+        if (s != null) {
+            mPlayer.play(s);
         }
     }
 
@@ -97,6 +132,14 @@ public class MainActivity extends Activity implements
     @Override
     public void onPlaybackEvent(EventType eventType, PlayerState playerState) {
         Log.d("MainActivity", "Playback event received: " + eventType.name());
+
+        mIsPlaying = playerState.playing;
+
+        if (mLastTrackURI == null || !playerState.trackUri.equals(mLastTrackURI)) {
+            mLastTrackURI = playerState.trackUri;
+            mTrackTitle.setText(mLastTrackURI);
+        }
+
     }
 
     @Override
